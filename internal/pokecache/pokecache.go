@@ -46,11 +46,9 @@ func (c *Cache) reapLoop(reapInterval time.Duration) {
 	ticker := time.NewTicker(reapInterval)
 	defer ticker.Stop()
 
-	for {
-		<-ticker.C
-		currentTime := time.Now()
-
+	for range ticker.C {
 		c.mu.Lock()
+		currentTime := time.Now()
 
 		for key, i := range c.cache {
 			if currentTime.Sub(i.createdAt) >= reapInterval {

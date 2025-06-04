@@ -8,11 +8,15 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
+
+	"github.com/FlamestarRS/pokedex/internal/pokecache"
 )
 
 func startRepl() {
 	scanner := bufio.NewScanner(os.Stdin)
 	config := config{
+		cache:    *pokecache.NewCache(5 * time.Second),
 		Next:     "https://pokeapi.co/api/v2/location-area/",
 		Previous: "",
 	}
@@ -80,6 +84,7 @@ type cliCommand struct {
 }
 
 type config struct {
+	cache    pokecache.Cache
 	Next     string
 	Previous string
 }
@@ -99,7 +104,31 @@ func commandHelp(config *config) error {
 	return nil
 }
 
+type Location struct {
+	Count    int    `json:"count"`
+	Next     string `json:"next"`
+	Previous string `json:"previous"`
+	Results  []struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	} `json:"results"`
+}
+
 func commandMap(config *config) error {
+	if val, ok := config.cache.Get(config.Next); ok {
+		var locations Location
+		err := json.Unmarshal(val, &locations)
+		if err != nil {
+			return fmt.Errorf("error unmarshaling JSON: %s", err)
+		}
+		for _, loc := range locations.Results {
+			fmt.Println(loc.Name)
+		}
+		config.Next = locations.Next
+		config.Previous = locations.Previous
+		return nil
+	}
+
 	res, err := http.Get(config.Next)
 	if err != nil {
 		return err
@@ -115,15 +144,7 @@ func commandMap(config *config) error {
 	if err != nil {
 		return err
 	}
-	type Location struct {
-		Count    int    `json:"count"`
-		Next     string `json:"next"`
-		Previous string `json:"previous"`
-		Results  []struct {
-			Name string `json:"name"`
-			URL  string `json:"url"`
-		} `json:"results"`
-	}
+
 	var locations Location
 	err = json.Unmarshal(body, &locations)
 	if err != nil {
@@ -133,6 +154,7 @@ func commandMap(config *config) error {
 		fmt.Println(loc.Name)
 	}
 
+	config.cache.Add(config.Next, body)
 	config.Next = locations.Next
 	config.Previous = locations.Previous
 
@@ -144,6 +166,21 @@ func commandMapb(config *config) error {
 		fmt.Println("You're on the first page")
 		return nil
 	}
+
+	if val, ok := config.cache.Get(config.Previous); ok {
+		var locations Location
+		err := json.Unmarshal(val, &locations)
+		if err != nil {
+			return fmt.Errorf("error unmarshaling JSON: %s", err)
+		}
+		for _, loc := range locations.Results {
+			fmt.Println(loc.Name)
+		}
+		config.Next = locations.Next
+		config.Previous = locations.Previous
+		return nil
+	}
+
 	res, err := http.Get(config.Previous)
 	if err != nil {
 		return err
@@ -159,15 +196,7 @@ func commandMapb(config *config) error {
 	if err != nil {
 		return err
 	}
-	type Location struct {
-		Count    int    `json:"count"`
-		Next     string `json:"next"`
-		Previous string `json:"previous"`
-		Results  []struct {
-			Name string `json:"name"`
-			URL  string `json:"url"`
-		} `json:"results"`
-	}
+
 	var locations Location
 	err = json.Unmarshal(body, &locations)
 	if err != nil {
@@ -177,6 +206,7 @@ func commandMapb(config *config) error {
 		fmt.Println(loc.Name)
 	}
 
+	config.cache.Add(config.Previous, body)
 	config.Next = locations.Next
 	config.Previous = locations.Previous
 
