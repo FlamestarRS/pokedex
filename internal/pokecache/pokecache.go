@@ -34,15 +34,12 @@ func (c *Cache) Add(key string, val []byte) {
 	}
 }
 
-func (c *Cache) Get(key string) (val []byte, found bool) {
+func (c *Cache) Get(key string) ([]byte, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	exists, ok := c.cache[key]
-	if ok {
-		return exists.val, true
-	}
-	return nil, false
+	return exists.val, ok
 }
 
 func (c *Cache) reapLoop(reapInterval time.Duration) {
