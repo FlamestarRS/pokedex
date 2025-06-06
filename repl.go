@@ -13,10 +13,11 @@ import (
 func startRepl() {
 	scanner := bufio.NewScanner(os.Stdin)
 	config := config{
-		cache:    *pokecache.NewCache(5 * time.Second),
-		Next:     "https://pokeapi.co/api/v2/location-area/",
-		Previous: "",
-		Name:     "",
+		cache:         *pokecache.NewCache(5 * time.Second),
+		Next:          "https://pokeapi.co/api/v2/location-area/",
+		Previous:      "",
+		Name:          "",
+		CaughtPokemon: map[string]Pokemon{},
 	}
 
 	for {
@@ -81,6 +82,11 @@ func getCommands() map[string]cliCommand {
 			description: "Displays all Pokemon in an area",
 			callback:    commandExplore,
 		},
+		"catch": {
+			name:        "catch",
+			description: "Attempt to catch a Pokemon",
+			callback:    commandCatch,
+		},
 	}
 }
 
@@ -91,8 +97,9 @@ type cliCommand struct {
 }
 
 type config struct {
-	cache    pokecache.Cache
-	Next     string
-	Previous string
-	Name     string
+	cache         pokecache.Cache
+	Next          string
+	Previous      string
+	Name          string
+	CaughtPokemon map[string]Pokemon
 }
