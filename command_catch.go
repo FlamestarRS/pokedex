@@ -46,7 +46,6 @@ func commandCatch(config *config) error {
 	if catchRoll >= pokemon.BaseExperience {
 		fmt.Println("Gotcha!")
 		fmt.Println(pokemon.Name + " was caught!")
-		fmt.Println(config.Name, pokemon.Name, catchRoll, pokemon.BaseExperience)
 
 		config.CaughtPokemon[pokemon.Name] = pokemon
 
@@ -63,7 +62,6 @@ func commandCatch(config *config) error {
 		fmt.Println("Oh, no! The Pokemon broke free!")
 	}
 
-	fmt.Println(config.Name, pokemon.Name, catchRoll, pokemon.BaseExperience)
 	return nil
 }
 
