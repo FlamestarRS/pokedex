@@ -24,6 +24,10 @@ func startRepl() {
 		fmt.Print("Pokedex > ")
 		scanner.Scan()
 		command := cleanInput(scanner.Text())
+		if len(command) == 0 {
+			fmt.Println("Please enter a command. Try 'help'.")
+			continue
+		}
 		if len(command) > 1 {
 			config.Name = command[1]
 		}
